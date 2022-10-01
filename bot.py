@@ -12,6 +12,9 @@ load_dotenv()
 TOKEN = os.getenv('DISCORD_TOKEN')
 GUILD = os.getenv('DISCORD_GUILD')
 GUILDID = os.getenv('DISCORD_GUILDID')
+LAVALINKADDRESS = os.getenv('LAVALINK_ADDRESS')
+LAVALINKPORT = os.getenv('LAVALINK_PORT')
+LAVALINKPASSWORD = os.getenv('LAVALINK_PASSWORD')
 
 # Client
 intents = discord.Intents.all()
@@ -51,9 +54,9 @@ async def connect_nodes():
     await bot.wait_until_ready()
     await wavelink.NodePool.create_node(
         bot=bot,
-        host='0.0.0.0',
-        port=2333,
-        password='passyoushallnot'
+        host=LAVALINKADDRESS,
+        port=LAVALINKPORT,
+        password=LAVALINKPASSWORD
     )
 
 # Events
