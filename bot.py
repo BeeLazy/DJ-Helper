@@ -60,6 +60,13 @@ async def connect_nodes():
         password=LAVALINKPASSWORD
     )
 
+# Converts milliseconds into a hour, minute, second tuple
+async def timeTuple(ms: int):
+    hours, ms = divmod(ms, 3600000)
+    minutes, ms = divmod(ms, 60000)
+    seconds = float(ms) / 1000
+    return (hours, minutes, seconds)
+
 # Events
 @bot.event
 async def on_wavelink_node_ready(node: wavelink.Node):
@@ -315,6 +322,27 @@ async def play(ctx, *, search: wavelink.YouTubeTrack):
         )
         embed.set_author(name=ctx.author.display_name, url=f'https://discordapp.com/users/{ctx.author.id}', icon_url=ctx.author.display_avatar)
         await ctx.send(embed=embed)
+
+@bot.command()
+async def seek(ctx, *, position: int=0):
+    vc = ctx.voice_client
+    if vc:
+        if not vc.is_playing():
+            return await ctx.send('Nothing is playing.')
+
+        print('New position requested: [{0[0]:.0f}h {0[1]:.0f}m {0[2]:.0f}s]'.format(await timeTuple((vc.position + position)*1000)))
+        embed = discord.Embed(
+            title=vc.source.title,
+            url=vc.source.uri,
+            description=f'<@{ctx.author.id}> changed playback position of {vc.source.title} to ' + '[{0[0]:.0f}h {0[1]:.0f}m {0[2]:.0f}s]'.format(await timeTuple((vc.position + position)*1000))
+        )
+        embed.set_author(name=ctx.author.display_name, url=f'https://discordapp.com/users/{ctx.author.id}', icon_url=ctx.author.display_avatar)
+        await ctx.send(embed=embed)
+        await vc.seek((vc.position + position) * 1000)
+        if vc.is_paused():
+            await vc.resume()
+    else:
+        await ctx.send('The bot is not connected to a voice channel.')
 
 @bot.command()
 async def skip(ctx):
