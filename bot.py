@@ -69,6 +69,26 @@ async def timeTuple(ms: int):
 
 # Events
 @bot.event
+async def on_message(message):
+    await bot.process_commands(message)
+    if message.author.id == bot.user.id:
+        return
+
+    msg_content = message.content.lower()
+
+    # Delete messages with commands
+    if message.content.startswith('!help'):
+        print(f'Deleting user message {message.id}. Reason: Processed command')
+        await message.delete()
+
+    # Delete messages with forbidden words
+    forbiddenWords = ['forbiddenwordsplaceholder1', 'forbiddenwordsplaceholder2']   
+    if any(word in msg_content for word in forbiddenWords):
+        print(f'Deleting user message {message.id}. Reason: Forbidden word')
+        await message.author.send('Your message was deleted do to faul language')
+        await message.delete()
+
+@bot.event
 async def on_wavelink_node_ready(node: wavelink.Node):
     print(f'Node: <{node.identifier}> is ready!')
 
