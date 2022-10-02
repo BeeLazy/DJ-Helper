@@ -6,6 +6,7 @@ import mp3
 import discord
 from discord.ext import commands
 import wavelink
+import asyncio
 
 # Environment
 load_dotenv()
@@ -45,8 +46,8 @@ async def on_ready():
         guild = await bot.fetch_guild(GUILDID)
 
     print(
-        f'{bot.user}(id: {bot.user.id}) connected to the following guild:\n'
-        f'{guild.name}(id: {guild.id})'
+        f'{bot.user}(id:{bot.user.id}) connected to the following guild:\n'
+        f'{guild.name}(id:{guild.id})'
     )
 
 # Helper functions
@@ -68,7 +69,38 @@ async def on_wavelink_node_ready(node: wavelink.Node):
 async def on_wavelink_track_end(player: CustomPlayer, track: wavelink.Track, reason):
     if not player.queue.is_empty:
         next_track = player.queue.get()
+        # Check that bot is in same voice channel as queuer
+        # Should we follow the user if he have changed voice channel,
+        # or contine to play where he was when it was queued? -> Create Follow option
+        queuer = discord.utils.get(player.guild.members, id=next_track.info.get('QueuerId'))
+        if not queuer.voice.channel.id == player.channel.id:
+            print(f'Queuer is currently in voicechannel {queuer.voice.channel.name}')
+            print(f'Bot is currently in voicechannel {player.channel.name}')
+            print(f'Moving bot from {player.channel.name}(id:{player.channel.id}) to {queuer.voice.channel.name}(id:{queuer.voice.channel.id})')
+            await player.move_to(bot.get_channel(queuer.voice.channel.id))
+            # Without sleep, the next calls to play will pass old data in the ctx object
+            while player.channel.id != queuer.voice.channel.id:
+                await asyncio.sleep(0.1)
         await player.play(next_track)
+
+@bot.event
+async def on_wavelink_track_start(player: CustomPlayer, track: wavelink.Track):
+    print(f'Started playing {track.title}')
+    queuer = discord.utils.get(player.guild.members, id=player.track.info.get('QueuerId'))
+    if queuer == None:
+        queuer = await player.guild.fetch_member(player.track.info.get('QueuerId'))
+        
+    embed = discord.Embed(
+        title=track.title,
+        url=track.uri,
+        description=f"Now playing {track.title}({track.duration}s) in <#{player.channel.id}> queued by <@{player.track.info.get('QueuerId')}> in <#{player.track.info.get('QueuerChannelId')}>"
+    )
+    embed.set_author(name=queuer.display_name, url=f'https://discordapp.com/users/{queuer.id}', icon_url=queuer.display_avatar)
+    # Send the player update to the channel the song was queue in,
+    # or send it to the channel the bot is playing the music in? -> Create Follow option
+    #await player.channel.send(embed=embed)
+    qc = bot.get_channel(player.track.info.get('QueuerChannelId'))
+    await qc.send(embed=embed)
 
 # Commands
 @bot.command()
@@ -254,16 +286,26 @@ async def play(ctx, *, search: wavelink.YouTubeTrack):
         vc: CustomPlayer = await ctx.author.voice.channel.connect(cls=custom_player)
 
     if vc.is_playing():
+        search.info.update({'QueuerId': ctx.author.id, 'QueuerChannelId': ctx.channel.id})
         vc.queue.put(item=search)
 
         embed = discord.Embed(
             title=search.title,
             url=search.uri,
-            description=f'<@{ctx.author.id}> queued {search.title} in <#{vc.channel.id}>'
+            description=f'<@{ctx.author.id}> queued {search.title}'
         )
         embed.set_author(name=ctx.author.display_name, url=f'https://discordapp.com/users/{ctx.author.id}', icon_url=ctx.author.display_avatar)
         await ctx.send(embed=embed)
     else:
+        search.info.update({'QueuerId': ctx.author.id, 'QueuerChannelId': ctx.channel.id})
+        if not ctx.author.voice.channel.id == vc.channel.id:
+            print(f'Queuer is currently in voicechannel {ctx.author.voice.channel.name}')
+            print(f'Bot is currently in voicechannel {vc.channel.name}')
+            print(f'Moving bot from {vc.channel.name}(id:{vc.channel.id}) to {ctx.author.voice.channel.name}(id:{ctx.author.voice.channel.id})')
+            await vc.move_to(bot.get_channel(ctx.author.voice.channel.id))
+            # Without sleep, the next calls to play will pass old data in the ctx object
+            while vc.channel.id != ctx.author.voice.channel.id:
+                await asyncio.sleep(0.1)
         await vc.play(search)
 
         embed = discord.Embed(
