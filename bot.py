@@ -136,6 +136,9 @@ async def disconnect(ctx):
     description='Download mp3 file from a link or title search'
 )
 async def download(ctx, *, search: str=None):
+    print(f'Deleting user message {ctx.message.id}. Reason: Processed command')
+    await ctx.message.delete()
+
     vc = ctx.voice_client
     if vc:
         if vc.is_playing() and not vc.is_paused():
@@ -267,6 +270,9 @@ async def download(ctx, *, search: str=None):
 
 @bot.command()
 async def info(ctx):
+    print(f'Deleting user message {ctx.message.id}. Reason: Processed command')
+    await ctx.message.delete()
+
     embed = discord.Embed(
         title='Bot information',
         description='Github: [DJ-Helper](https://github.com/BeeLazy/DJ-Helper)\n\nCreated by <@516598387773014029> - Powered by [Lavalink](https://github.com/freyacodes/Lavalink), [Wavelink](https://github.com/PythonistaGuild/Wavelink), [youtube-dl](https://github.com/ytdl-org/youtube-dl)',
@@ -276,6 +282,9 @@ async def info(ctx):
 
 @bot.command()
 async def pause(ctx):
+    print(f'Deleting user message {ctx.message.id}. Reason: Processed command')
+    await ctx.message.delete()
+
     vc = ctx.voice_client
     if vc:
         if vc.is_playing() and not vc.is_paused():
@@ -287,6 +296,9 @@ async def pause(ctx):
 
 @bot.command()
 async def play(ctx, *, search: wavelink.YouTubeTrack):
+    print(f'Deleting user message {ctx.message.id}. Reason: Processed command')
+    await ctx.message.delete()
+
     vc = ctx.voice_client
     if not vc:
         custom_player = CustomPlayer()
@@ -325,6 +337,9 @@ async def play(ctx, *, search: wavelink.YouTubeTrack):
 
 @bot.command()
 async def seek(ctx, *, position: int=0):
+    print(f'Deleting user message {ctx.message.id}. Reason: Processed command')
+    await ctx.message.delete()
+
     vc = ctx.voice_client
     if vc:
         if not vc.is_playing():
@@ -346,6 +361,9 @@ async def seek(ctx, *, position: int=0):
 
 @bot.command()
 async def skip(ctx):
+    print(f'Deleting user message {ctx.message.id}. Reason: Processed command')
+    await ctx.message.delete()
+
     vc = ctx.voice_client
     if vc:
         if not vc.is_playing():
@@ -361,6 +379,9 @@ async def skip(ctx):
 
 @bot.command()
 async def resume(ctx):
+    print(f'Deleting user message {ctx.message.id}. Reason: Processed command')
+    await ctx.message.delete()
+
     vc = ctx.voice_client
     if vc:
         if vc.is_paused():
