@@ -37,6 +37,8 @@ Here we write upgrading notes for brands. It's a team effor to make them as stra
   MINOR A gfx banner for the main README would be nice
 - [Issue-18](https://github.com/BeeLazy/DJ-Helper/issues/18)
   MINOR There should be a CHANGELOG
+- [Issue-21](https://github.com/BeeLazy/DJ-Helper/issues/21)
+  MINOR The README banner should have the text DJ-Helper
 
 ### Changed
 
