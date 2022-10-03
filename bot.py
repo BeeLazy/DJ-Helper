@@ -356,6 +356,41 @@ async def play(ctx, *, search: wavelink.YouTubeTrack):
         await ctx.send(embed=embed)
 
 @bot.command()
+async def position(ctx, *, position: int=None):
+    print(f'Deleting user message {ctx.message.id}. Reason: Processed command')
+    await ctx.message.delete()
+
+    vc = ctx.voice_client
+    if vc:
+        if not vc.is_playing():
+            return await ctx.send('Nothing is playing.')
+
+        if position == None:
+            print('Current position requested: [{0[0]:.0f}h {0[1]:.0f}m {0[2]:.0f}s]'.format(await timeTuple((vc.position)*1000)))
+            embed = discord.Embed(
+                title=vc.source.title,
+                url=vc.source.uri,
+                description=f'Playback position of {vc.source.title} is ' + '[{0[0]:.0f}h {0[1]:.0f}m {0[2]:.0f}s].'.format(await timeTuple((vc.position)*1000)) +  f' Requested by <@{ctx.author.id}>'
+            )
+            embed.set_author(name=ctx.author.display_name, url=f'https://discordapp.com/users/{ctx.author.id}', icon_url=ctx.author.display_avatar)
+            await ctx.send(embed=embed)
+        else:
+            print('New position requested: [{0[0]:.0f}h {0[1]:.0f}m {0[2]:.0f}s]'.format(await timeTuple((vc.position + position)*1000)))
+            embed = discord.Embed(
+                title=vc.source.title,
+                url=vc.source.uri,
+                description=f'<@{ctx.author.id}> changed playback position of {vc.source.title} to ' + '[{0[0]:.0f}h {0[1]:.0f}m {0[2]:.0f}s]'.format(await timeTuple((vc.position + position)*1000))
+            )
+            embed.set_author(name=ctx.author.display_name, url=f'https://discordapp.com/users/{ctx.author.id}', icon_url=ctx.author.display_avatar)
+            await ctx.send(embed=embed)
+            await vc.seek((vc.position + position) * 1000)
+
+        if vc.is_paused():
+            await vc.resume()
+    else:
+        await ctx.send('The bot is not connected to a voice channel.')
+
+@bot.command()
 async def seek(ctx, *, position: int=0):
     print(f'Deleting user message {ctx.message.id}. Reason: Processed command')
     await ctx.message.delete()
