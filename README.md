@@ -59,7 +59,7 @@ The roadmap is to:
 [BeeLazy](https://t.me/BeeLazy)
 
 ## Licence
-[![License: MIT](img/License-MIT-blue.svg)](LICENSE)
+[![License: MIT](img/license-MIT-blue.svg)](LICENSE)
 The project is licensed under the MIT license.
 
 ## Project status
