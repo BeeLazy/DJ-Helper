@@ -21,6 +21,8 @@ Here we write upgrading notes for brands. It's a team effor to make them as stra
   MINOR The bot would look much nicer with avatar gfx
 - [Issue-7](https://github.com/BeeLazy/DJ-Helper/issues/7)
   MINOR A document describing how to install the bot
+- [Issue-8](https://github.com/BeeLazy/DJ-Helper/issues/8)
+  MINOR Project readme should contain workflow and information about how to contribute
 - [Issue-9](https://github.com/BeeLazy/DJ-Helper/issues/9)
   MINOR The player should have a seek command
 - [Issue-11](https://github.com/BeeLazy/DJ-Helper/issues/11)
@@ -39,6 +41,8 @@ Here we write upgrading notes for brands. It's a team effor to make them as stra
 ### Fixed
 - [Issue-10](https://github.com/BeeLazy/DJ-Helper/issues/10)
   MINOR The sourcecode should not expose passwords
+- [Issue-19](https://github.com/BeeLazy/DJ-Helper/issues/19)
+  PATCH MIT badge is missing under License in README
 
 ## [0.1.0] - 2022-09-29
 
