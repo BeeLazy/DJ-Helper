@@ -26,7 +26,7 @@ intents = discord.Intents.all()
 #intents.members = False
 #intents.guilds = False
 
-bot = commands.Bot(command_prefix="!", intents=intents)
+bot = commands.Bot(command_prefix=commands.when_mentioned_or('!'), intents=intents)
 
 class CustomPlayer(wavelink.Player):
     def __init__(self):
