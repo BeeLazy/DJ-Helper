@@ -1,0 +1,11 @@
+# Wavelink
+wavelink
+
+# Discord
+discord.py
+
+# Dotenv
+python-dotenv
+
+# youtube-dl
+youtube_dl
