@@ -19,6 +19,8 @@ Here we write upgrading notes for brands. It's a team effor to make them as stra
   MINOR See what is currently playing
 - [Issue-6](https://github.com/BeeLazy/DJ-Helper/issues/6)
   MINOR The bot would look much nicer with avatar gfx
+- [Issue-7](https://github.com/BeeLazy/DJ-Helper/issues/7)
+  MINOR A document describing how to install the bot
 - [Issue-9](https://github.com/BeeLazy/DJ-Helper/issues/9)
   MINOR The player should have a seek command
 - [Issue-11](https://github.com/BeeLazy/DJ-Helper/issues/11)
