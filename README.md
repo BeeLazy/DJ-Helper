@@ -58,9 +58,12 @@ The roadmap is to:
 ## Authors and acknowledgment
 [BeeLazy](https://t.me/BeeLazy)
 
-## Licence
+## Licences
 [![License: MIT](img/license-MIT-blue.svg)](LICENSE)
-The project is licensed under the MIT license.
+DJ-Helper, Wavelink, Lavalink, discord.py is licensed under the MIT license.
+
+[![License: Unlicense](img/license-Unlicense-blue.svg)](http://unlicense.org/)
+youtube-dl is licensed under the Unlicense license.
 
 ## Project status
 The project is currently under development.
