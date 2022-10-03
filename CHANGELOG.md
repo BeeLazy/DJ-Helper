@@ -27,6 +27,8 @@ Here we write upgrading notes for brands. It's a team effor to make them as stra
   MINOR The player should have a seek command
 - [Issue-11](https://github.com/BeeLazy/DJ-Helper/issues/11)
   MINOR The bot should delete request messages after processing them
+- [Issue-12](https://github.com/BeeLazy/DJ-Helper/issues/12)
+  MINOR A position command that returns the seek posistion of the current playing track
 - [Issue-14](https://github.com/BeeLazy/DJ-Helper/issues/14)
   MINOR The bot should delete help messages
 - [Issue-15](https://github.com/BeeLazy/DJ-Helper/issues/15)
