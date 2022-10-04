@@ -386,6 +386,30 @@ async def play(ctx, *, search: wavelink.YouTubeTrack):
         await vc.play(search)
 
 @bot.command()
+async def playing(ctx):
+    print(f'Deleting user message {ctx.message.id}. Reason: Processed command')
+    await ctx.message.delete()
+
+    vc = ctx.voice_client
+    if vc:
+        if not vc.is_playing():
+            return await ctx.send('Nothing is playing.')
+
+        print(f'Current playing song info requested:{vc.source.title}({vc.source.uri})')
+        embed = discord.Embed(
+            title=vc.source.title,
+            url=vc.source.uri,
+            description=f'Currently playing {vc.source.title}({vc.track.duration}s) at ' + '[{0[0]:.0f}h {0[1]:.0f}m {0[2]:.0f}s]'.format(await timeTuple((vc.position)*1000)) + f".\nOriginally requested by <@{vc.source.info.get('QueuerId')}> in <#{vc.source.info.get('QueuerChannelId')}>"
+        )
+        embed.set_author(name=ctx.author.display_name, url=f'https://discordapp.com/users/{ctx.author.id}', icon_url=ctx.author.display_avatar)
+        await ctx.send(embed=embed, delete_after=30)
+        
+        if vc.is_paused():
+            await vc.resume()
+    else:
+        await ctx.send('The bot is not connected to a voice channel.', delete_after=30)
+
+@bot.command()
 async def position(ctx, *, position: int=None):
     print(f'Deleting user message {ctx.message.id}. Reason: Processed command')
     await ctx.message.delete()
