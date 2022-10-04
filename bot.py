@@ -32,6 +32,7 @@ class CustomPlayer(wavelink.Player):
     def __init__(self):
         super().__init__()
         self.queue = wavelink.Queue()
+        self.embeddedplayers = dict()
 
 # HTTPS and websocket operations
 @bot.event
@@ -109,6 +110,19 @@ async def on_wavelink_track_end(player: CustomPlayer, track: wavelink.Track, rea
             while player.channel.id != queuer.voice.channel.id:
                 await asyncio.sleep(0.1)
         await player.play(next_track)
+    else:
+        # Update embedded player
+        embed = discord.Embed(
+            title='Playlist has concluded',
+            url='https://github.com/BeeLazy/DJ-Helper',
+            description='Thank you for using DJ-Helper!'
+        )
+        embed.set_author(name=bot.user.display_name, url=f'https://discordapp.com/users/{bot.user.id}', icon_url=bot.user.display_avatar)
+
+        ep = player.embeddedplayers.get(player.guild.id)
+        embeddedPlayerChannel = bot.get_channel(ep[0])
+        embeddedPlayer = await embeddedPlayerChannel.fetch_message(ep[1])
+        await embeddedPlayer.edit(embed=embed, delete_after=300)
 
 @bot.event
 async def on_wavelink_track_start(player: CustomPlayer, track: wavelink.Track):
@@ -116,7 +130,7 @@ async def on_wavelink_track_start(player: CustomPlayer, track: wavelink.Track):
     queuer = discord.utils.get(player.guild.members, id=player.track.info.get('QueuerId'))
     if queuer == None:
         queuer = await player.guild.fetch_member(player.track.info.get('QueuerId'))
-        
+    
     embed = discord.Embed(
         title=track.title,
         url=track.uri,
@@ -126,8 +140,13 @@ async def on_wavelink_track_start(player: CustomPlayer, track: wavelink.Track):
     # Send the player update to the channel the song was queue in,
     # or send it to the channel the bot is playing the music in? -> Create Follow option
     #await player.channel.send(embed=embed)
-    qc = bot.get_channel(player.track.info.get('QueuerChannelId'))
-    await qc.send(embed=embed)
+    #qc = bot.get_channel(player.track.info.get('QueuerChannelId'))
+    #await qc.send(embed=embed)
+    # Update embedded player
+    ep = player.embeddedplayers.get(player.guild.id)
+    embeddedPlayerChannel = bot.get_channel(ep[0])
+    embeddedPlayer = await embeddedPlayerChannel.fetch_message(ep[1])
+    await embeddedPlayer.edit(embed=embed)
 
 # Commands
 @bot.command()
@@ -136,12 +155,12 @@ async def connect(ctx):
     try:
         channel = ctx.author.voice.channel
     except AttributeError:
-        return await ctx.send('Please join a voice channel to connect.')
+        return await ctx.send('Please join a voice channel to connect.', delete_after=30)
 
     if not vc:
         await ctx.author.voice.channel.connect(cls=CustomPlayer())
     else:
-        await ctx.send('The bot is already connected to a voice channel')
+        await ctx.send('The bot is already connected to a voice channel.', delete_after=30)
 
 @bot.command()
 async def disconnect(ctx):
@@ -149,7 +168,7 @@ async def disconnect(ctx):
     if vc:
         await vc.disconnect()
     else:
-        await ctx.send('The bot is not connected to a voice channel.')
+        await ctx.send('The bot is not connected to a voice channel.', delete_after=30)
 
 @bot.command(
     aliases=['ytdl', 'dl', 'mp3'],
@@ -298,10 +317,10 @@ async def info(ctx):
         description='Github: [DJ-Helper](https://github.com/BeeLazy/DJ-Helper)\n\nCreated by <@516598387773014029> - Powered by [Lavalink](https://github.com/freyacodes/Lavalink), [Wavelink](https://github.com/PythonistaGuild/Wavelink), [youtube-dl](https://github.com/ytdl-org/youtube-dl)',
         color=0x0066ff
     )
-    await ctx.send(embed=embed)
+    await ctx.send(embed=embed, delete_after=60)
 
 @bot.command()
-async def pause(ctx):
+async def pause(ctx): # TODO: Update embedded player
     print(f'Deleting user message {ctx.message.id}. Reason: Processed command')
     await ctx.message.delete()
 
@@ -310,9 +329,9 @@ async def pause(ctx):
         if vc.is_playing() and not vc.is_paused():
             await vc.pause()
         else:
-            await ctx.send('Nothing is playing.')
+            await ctx.send('Nothing is playing.', delete_after=30)
     else:
-        await ctx.send('The bot is not connected to a voice channel.')
+        await ctx.send('The bot is not connected to a voice channel.', delete_after=30)
 
 @bot.command()
 async def play(ctx, *, search: wavelink.YouTubeTrack):
@@ -325,7 +344,7 @@ async def play(ctx, *, search: wavelink.YouTubeTrack):
         vc: CustomPlayer = await ctx.author.voice.channel.connect(cls=custom_player)
 
     if vc.is_playing():
-        search.info.update({'QueuerId': ctx.author.id, 'QueuerChannelId': ctx.channel.id})
+        search.info.update({'EmbeddedPlayerChannelId': vc.track.info.get('EmbeddedPlayerChannelId'), 'EmbeddedPlayerId': vc.track.info.get('EmbeddedPlayerId'), 'QueuerId': ctx.author.id, 'QueuerChannelId': ctx.channel.id})
         vc.queue.put(item=search)
 
         embed = discord.Embed(
@@ -334,9 +353,11 @@ async def play(ctx, *, search: wavelink.YouTubeTrack):
             description=f'<@{ctx.author.id}> queued {search.title}'
         )
         embed.set_author(name=ctx.author.display_name, url=f'https://discordapp.com/users/{ctx.author.id}', icon_url=ctx.author.display_avatar)
-        await ctx.send(embed=embed)
+        await ctx.send(embed=embed, delete_after=30)
     else:
-        search.info.update({'QueuerId': ctx.author.id, 'QueuerChannelId': ctx.channel.id})
+        # TODO: probably need to check if it has a queue. 
+        # It could have a queue, and hence a embedded player already that we should update
+        # Alternatively, we could delete the embedded player on pause, but not a good idea
         if not ctx.author.voice.channel.id == vc.channel.id:
             print(f'Queuer is currently in voicechannel {ctx.author.voice.channel.name}')
             print(f'Bot is currently in voicechannel {vc.channel.name}')
@@ -345,15 +366,24 @@ async def play(ctx, *, search: wavelink.YouTubeTrack):
             # Without sleep, the next calls to play will pass old data in the ctx object
             while vc.channel.id != ctx.author.voice.channel.id:
                 await asyncio.sleep(0.1)
-        await vc.play(search)
 
+        # Untill the todo over is sorted,
+        # we'll just pretend that we always want to create a new embedded player
+        # and not just update the one we already have. Dont use pause, then play
+        # Create embedded player
         embed = discord.Embed(
-            title=vc.source.title,
-            url=vc.source.uri,
-            description=f'<@{ctx.author.id}> started playing {vc.source.title} in <#{vc.channel.id}>'
+            title=search.title,
+            url=search.uri,
+            description=f'<@{ctx.author.id}> started playing {search.title} in <#{vc.channel.id}>'
         )
         embed.set_author(name=ctx.author.display_name, url=f'https://discordapp.com/users/{ctx.author.id}', icon_url=ctx.author.display_avatar)
-        await ctx.send(embed=embed)
+        sent_message = await ctx.send(embed=embed)
+        
+        # Update embedded player metadata
+        vc.embeddedplayers.update({vc.guild.id : [ctx.channel.id, sent_message.id]})
+        search.info.update({'EmbeddedPlayerChannelId': ctx.channel.id, 'EmbeddedPlayerId': sent_message.id, 'QueuerId': ctx.author.id, 'QueuerChannelId': ctx.channel.id})
+
+        await vc.play(search)
 
 @bot.command()
 async def position(ctx, *, position: int=None):
@@ -373,7 +403,7 @@ async def position(ctx, *, position: int=None):
                 description=f'Playback position of {vc.source.title} is ' + '[{0[0]:.0f}h {0[1]:.0f}m {0[2]:.0f}s].'.format(await timeTuple((vc.position)*1000)) +  f' Requested by <@{ctx.author.id}>'
             )
             embed.set_author(name=ctx.author.display_name, url=f'https://discordapp.com/users/{ctx.author.id}', icon_url=ctx.author.display_avatar)
-            await ctx.send(embed=embed)
+            await ctx.send(embed=embed, delete_after=30)
         else:
             print('New position requested: [{0[0]:.0f}h {0[1]:.0f}m {0[2]:.0f}s]'.format(await timeTuple((vc.position + position)*1000)))
             embed = discord.Embed(
@@ -382,13 +412,13 @@ async def position(ctx, *, position: int=None):
                 description=f'<@{ctx.author.id}> changed playback position of {vc.source.title} to ' + '[{0[0]:.0f}h {0[1]:.0f}m {0[2]:.0f}s]'.format(await timeTuple((vc.position + position)*1000))
             )
             embed.set_author(name=ctx.author.display_name, url=f'https://discordapp.com/users/{ctx.author.id}', icon_url=ctx.author.display_avatar)
-            await ctx.send(embed=embed)
+            await ctx.send(embed=embed, delete_after=30)
             await vc.seek((vc.position + position) * 1000)
 
         if vc.is_paused():
             await vc.resume()
     else:
-        await ctx.send('The bot is not connected to a voice channel.')
+        await ctx.send('The bot is not connected to a voice channel.', delete_after=30)
 
 @bot.command()
 async def seek(ctx, *, position: int=0):
@@ -398,7 +428,7 @@ async def seek(ctx, *, position: int=0):
     vc = ctx.voice_client
     if vc:
         if not vc.is_playing():
-            return await ctx.send('Nothing is playing.')
+            return await ctx.send('Nothing is playing.', delete_after=30)
 
         print('New position requested: [{0[0]:.0f}h {0[1]:.0f}m {0[2]:.0f}s]'.format(await timeTuple((vc.position + position)*1000)))
         embed = discord.Embed(
@@ -407,12 +437,12 @@ async def seek(ctx, *, position: int=0):
             description=f'<@{ctx.author.id}> changed playback position of {vc.source.title} to ' + '[{0[0]:.0f}h {0[1]:.0f}m {0[2]:.0f}s]'.format(await timeTuple((vc.position + position)*1000))
         )
         embed.set_author(name=ctx.author.display_name, url=f'https://discordapp.com/users/{ctx.author.id}', icon_url=ctx.author.display_avatar)
-        await ctx.send(embed=embed)
+        await ctx.send(embed=embed, delete_after=30)
         await vc.seek((vc.position + position) * 1000)
         if vc.is_paused():
             await vc.resume()
     else:
-        await ctx.send('The bot is not connected to a voice channel.')
+        await ctx.send('The bot is not connected to a voice channel.', delete_after=30)
 
 @bot.command()
 async def skip(ctx):
@@ -422,7 +452,7 @@ async def skip(ctx):
     vc = ctx.voice_client
     if vc:
         if not vc.is_playing():
-            return await ctx.send('Nothing is playing.')
+            return await ctx.send('Nothing is playing.', delete_after=30)
         if vc.queue.is_empty:
             return await vc.stop()
 
@@ -430,7 +460,7 @@ async def skip(ctx):
         if vc.is_paused():
             await vc.resume()
     else:
-        await ctx.send('The bot is not connected to a voice channel.')
+        await ctx.send('The bot is not connected to a voice channel.', delete_after=30)
 
 @bot.command()
 async def resume(ctx):
@@ -442,17 +472,17 @@ async def resume(ctx):
         if vc.is_paused():
             await vc.resume()
         else:
-            await ctx.send('Nothing is paused.')
+            await ctx.send('Nothing is paused.', delete_after=30)
     else:
-        await ctx.send('The bot is not connected to a voice channel')
+        await ctx.send('The bot is not connected to a voice channel', delete_after=30)
 
 # Error handling
 @play.error
 async def play_error(ctx, error):
     if isinstance(error, commands.BadArgument):
-        await ctx.send('Could not find a track.')
+        await ctx.send('Could not find a track.', delete_after=30)
     else:
-        await ctx.send('General error. Check that you are connected to a voice channel.')
+        await ctx.send('General error. Check that you are connected to a voice channel.', delete_after=30)
 
 # Execution
 bot.run(TOKEN)
