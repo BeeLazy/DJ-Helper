@@ -314,7 +314,7 @@ async def info(ctx):
 
     embed = discord.Embed(
         title='Bot information',
-        description='Github: [DJ-Helper](https://github.com/BeeLazy/DJ-Helper)\n\nCreated by <@516598387773014029> - Powered by [Lavalink](https://github.com/freyacodes/Lavalink), [Wavelink](https://github.com/PythonistaGuild/Wavelink), [youtube-dl](https://github.com/ytdl-org/youtube-dl)',
+        description='Github: [DJ-Helper](https://github.com/BeeLazy/DJ-Helper) v0.1.0\n\nCreated by <@516598387773014029> - Powered by [Lavalink](https://github.com/freyacodes/Lavalink), [Wavelink](https://github.com/PythonistaGuild/Wavelink), [youtube-dl](https://github.com/ytdl-org/youtube-dl)',
         color=0x0066ff
     )
     await ctx.send(embed=embed, delete_after=60)
