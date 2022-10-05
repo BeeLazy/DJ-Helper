@@ -29,6 +29,8 @@ Here we write upgrading notes for brands. It's a team effor to make them as stra
   MINOR The bot should delete request messages after processing them
 - [Issue-12](https://github.com/BeeLazy/DJ-Helper/issues/12)
   MINOR A position command that returns the seek posistion of the current playing track
+- [Issue-13](https://github.com/BeeLazy/DJ-Helper/issues/13)
+  MINOR A playing command that returns information about the current playing track
 - [Issue-14](https://github.com/BeeLazy/DJ-Helper/issues/14)
   MINOR The bot should delete help messages
 - [Issue-15](https://github.com/BeeLazy/DJ-Helper/issues/15)
@@ -41,6 +43,12 @@ Here we write upgrading notes for brands. It's a team effor to make them as stra
   MINOR The bot should react to mentions
 - [Issue-21](https://github.com/BeeLazy/DJ-Helper/issues/21)
   MINOR The README banner should have the text DJ-Helper
+- [Issue-22](https://github.com/BeeLazy/DJ-Helper/issues/22)
+  MINOR Project should have license information for all dependencies  
+- [Issue-23](https://github.com/BeeLazy/DJ-Helper/issues/23)
+  MINOR The bot should clean up it's own mess(ages and embedded player)
+- [Issue-24](https://github.com/BeeLazy/DJ-Helper/issues/24)
+  MINOR Info command should show version of bot
 
 ### Changed
 
