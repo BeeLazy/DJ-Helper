@@ -13,6 +13,19 @@ Here we write upgrading notes for brands. It's a team effor to make them as stra
   MINOR Issue title goes here.
 - [Issue-YYY](https://github.com/BeeLazy/DJ-Helper/issues/YYY)
   PATCH Issue title goes here.
+
+### Changed
+
+### Fixed
+
+## [0.2.0] - 2022-10-05
+
+Upgrade instructions:
+- Shut down the bot and Lavalink
+- Overwrite the files in the install folder with the new files
+- Start Lavalink, and then the bot
+
+### Added
 - [Issue-1](https://github.com/BeeLazy/DJ-Helper/issues/1)
   MINOR The bot should have streaming functionality and act as a music player
 - [Issue-5](https://github.com/BeeLazy/DJ-Helper/issues/5)
