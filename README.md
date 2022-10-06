@@ -60,7 +60,8 @@ The roadmap is to:
 
 ## Licences
 [![License: MIT](img/license-MIT-blue.svg)](LICENSE)
-DJ-Helper, Wavelink, Lavalink, discord.py is licensed under the MIT license.
+DJ-Helper, Wavelink, Lavalink, discord.py, 
+dropbox-sdk-python is licensed under the MIT license.
 
 [![License: Unlicense](img/license-Unlicense-blue.svg)](http://unlicense.org/)
 youtube-dl is licensed under the Unlicense license.
@@ -83,3 +84,6 @@ The project is currently under development.
 
 [youtube-dl documentation](https://github.com/ytdl-org/youtube-dl/blob/master/README.md) - 
 [youtube-dl sourcecode](https://github.com/ytdl-org/youtube-dl)
+
+[dropbox-sdk-python documentation](https://dropbox-sdk-python.readthedocs.io/en/latest/) - 
+[dropbox-sdk-python sourcecode](https://github.com/dropbox/dropbox-sdk-python)

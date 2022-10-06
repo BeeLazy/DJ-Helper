@@ -27,6 +27,7 @@ pip3 install -U wavelink
 pip3 install -U discord.py
 pip3 install -U python-dotenv
 pip3 install -U youtube_dl
+pip3 install -U dropbox
 ```
 
 Some of the settings are stored in environment variables. On Ubuntu one could f.ex store those in a .env file or in the global environment file. The following keys needs to be added:
@@ -36,6 +37,7 @@ Some of the settings are stored in environment variables. On Ubuntu one could f.
 - LAVALINK_ADDRESS
 - LAVALINK_PORT
 - LAVALINK_PASSWORD
+- DROPBOX_TOKEN
 
 ```code
 sudo nano /etc/environment

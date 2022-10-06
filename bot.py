@@ -7,6 +7,8 @@ import discord
 from discord.ext import commands
 import wavelink
 import asyncio
+from dbox import DBox
+from dropbox.exceptions import AuthError
 
 # Environment
 load_dotenv()
@@ -16,8 +18,12 @@ GUILDID = os.getenv('DISCORD_GUILDID')
 LAVALINKADDRESS = os.getenv('LAVALINK_ADDRESS')
 LAVALINKPORT = os.getenv('LAVALINK_PORT')
 LAVALINKPASSWORD = os.getenv('LAVALINK_PASSWORD')
+DROPBOXTOKEN = os.getenv('DROPBOX_TOKEN')
 
-# Client
+# Dropbox client
+dBox = DBox(DROPBOXTOKEN)
+
+# Discord Client
 intents = discord.Intents.all()
 #intents = discord.Intents()
 #intents.messages = True
@@ -183,13 +189,9 @@ async def download(ctx, *, search: str=None):
         if vc.is_playing() and not vc.is_paused():
             if ctx.message.content:
                 msg = ctx.message.content
-                await ctx.send(f'Got content:{msg}')
                 if search:
-                    print(f'We have some message content filtered:{search}')
                     # Avoid using message.content
                     msg = search
-                    print(f'Message content: {msg} \n')
-
                     # regex to find url in the sent message
                     url = re.findall(r'(?:(?:https?|ftp):\/\/)?[\w/\-?=%.]+\.[\w/\-?=%.]+', msg)
                     print(url)
@@ -209,25 +211,46 @@ async def download(ctx, *, search: str=None):
                                 # get all of the .mp3 file in this directory
                                 for files in glob.glob('*.mp3'):
 
-                                    # for each .mp3 file get the file size
+                                    # for each .mp3 file get the file size as integer
                                     file_size = getsize(files)
-                                    # convert the file size into an integer
                                     file_size = int(file_size)
 
-                                    # check if the file size is over 8000000 bytes (discord limit for non bosted server's)
-                                    if file_size > 8000000:
-                                        print('The file size is over 8MB...\n')
+                                    # Files over 350MB are not allowed. Limit in upload_file
+                                    if file_size > 350000000:
+                                        print('The file size is over 350MB')
 
                                         embed = discord.Embed(
-                                            title='Error: Filesize over 8MB',
-                                            description="Something went wrong :confused:\n\nTry sending a song that is under 7 minutes long, \nbecause of Discord's file size limit.\n\nCheck out !help and !info commands.",
+                                            title='Error: Filesize over 350MB',
+                                            description="Something went wrong :confused:\n\nTry sending a song that is not this huge!\n\nThe maximum size allowed for conversion is 350MB.\n\nCheck out !help and !info commands.",
                                             color=0x0066ff
                                         )
                                         await ctx.send(embed=embed)
 
                                         os.remove(files)
-                                        print('File was removed')
+                                        print('File was deleted')
+                                    # Check if the file size is over 8MB (Discord limit for non bosted server's). See issue#2
+                                    # Upload to Dropbox and share link
+                                    elif file_size > 8000000:
+                                        print('The file size is 8MB-350MB')
+                                        file_to = f'/{files}'
+                                        print(f'Starting to upload {files} to Dropbox')
+                                        dBox.upload_file(file_from=files, file_to=file_to)
+                                        link = dBox.create_shared_link(file_to)
+                                        print(f'Created shared link {link}')
+                                        
+                                        embed = discord.Embed(
+                                            title=files,
+                                            url=link,
+                                            description=f'File has been converted to MP3\n\n[Download it here]({link})',
+                                            color=0x0066ff
+                                        )
+                                        await ctx.send(embed=embed)
+
+                                        os.remove(files)
+                                        print('File was deleted')
+                                    # Send as attachment to channel
                                     else:
+                                        print('The file size is under 8MB')
                                         await ctx.send(file=discord.File(files))
                                         print('File was sent')
 
@@ -272,20 +295,42 @@ async def download(ctx, *, search: str=None):
                             file_size = getsize(files)
                             file_size = int(file_size)
 
-                            # check if the file size is over 8000000 bytes (discord limit for non bosted server's). See issue#2
-                            if file_size > 8000000:
-                                print('The file size is over 8MB')
+                            # Files over 350MB are not allowed. Limit in upload_file
+                            if file_size > 350000000:
+                                print('The file size is over 350MB')
 
                                 embed = discord.Embed(
-                                    title='Error: Filesize over 8MB',
-                                    description="Something went wrong :confused:\n\nTry sending a song that is under 7 minutes long, \nbecause of Discord's file size limit.\n\nCheck out !help and !info commands.",
+                                    title='Error: Filesize over 350MB',
+                                    description="Something went wrong :confused:\n\nTry sending a song that is not this huge!\n\nThe maximum size allowed for conversion is 350MB.\n\nCheck out !help and !info commands.",
                                     color=0x0066ff
                                 )
                                 await ctx.send(embed=embed)
 
                                 os.remove(files)
                                 print('File was deleted')
+                            # Check if the file size is over 8MB (Discord limit for non bosted server's). See issue#2
+                            # Upload to Dropbox and share link
+                            elif file_size > 8000000:
+                                print('The file size is 8MB-350MB')
+                                file_to = f'/{files}'
+                                print(f'Starting to upload {files} to Dropbox')
+                                dBox.upload_file(file_from=files, file_to=file_to)
+                                link = dBox.create_shared_link(file_to)
+                                print(f'Created shared link {link}')
+                                
+                                embed = discord.Embed(
+                                    title=files,
+                                    url=link,
+                                    description=f'File has been converted to MP3\n\n[Download it here]({link})',
+                                    color=0x0066ff
+                                )
+                                await ctx.send(embed=embed)
+
+                                os.remove(files)
+                                print('File was deleted')
+                            # Send as attachment to channel
                             else:
+                                print('The file size is under 8MB')
                                 await ctx.send(file=discord.File(files))
                                 print('File was sent')
 
@@ -314,7 +359,7 @@ async def info(ctx):
 
     embed = discord.Embed(
         title='Bot information',
-        description='Github: [DJ-Helper](https://github.com/BeeLazy/DJ-Helper) v0.1.0\n\nCreated by <@516598387773014029> - Powered by [Lavalink](https://github.com/freyacodes/Lavalink), [Wavelink](https://github.com/PythonistaGuild/Wavelink), [youtube-dl](https://github.com/ytdl-org/youtube-dl)',
+        description='Github: [DJ-Helper](https://github.com/BeeLazy/DJ-Helper) v0.2.0\n\nCreated by <@516598387773014029> - Powered by [Lavalink](https://github.com/freyacodes/Lavalink), [Wavelink](https://github.com/PythonistaGuild/Wavelink), [youtube-dl](https://github.com/ytdl-org/youtube-dl)',
         color=0x0066ff
     )
     await ctx.send(embed=embed, delete_after=60)

@@ -13,6 +13,8 @@ Here we write upgrading notes for brands. It's a team effor to make them as stra
   MINOR Issue title goes here.
 - [Issue-YYY](https://github.com/BeeLazy/DJ-Helper/issues/YYY)
   PATCH Issue title goes here.
+- [Issue-2](https://github.com/BeeLazy/DJ-Helper/issues/2)
+  MINOR ytdl should offer alternativ download ways for files over 8MB
 
 ### Changed
 
