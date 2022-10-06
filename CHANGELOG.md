@@ -15,6 +15,8 @@ Here we write upgrading notes for brands. It's a team effor to make them as stra
   PATCH Issue title goes here.
 - [Issue-2](https://github.com/BeeLazy/DJ-Helper/issues/2)
   MINOR ytdl should offer alternativ download ways for files over 8MB
+- [Issue-27](https://github.com/BeeLazy/DJ-Helper/issues/27)
+  MINOR The embedded downloader cleans up after itself
 
 ### Changed
 

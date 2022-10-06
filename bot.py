@@ -203,8 +203,16 @@ async def download(ctx, *, search: str=None):
                             validated_yt_url_2 = 'https://youtu.be/'
 
                             if(validated_yt_url_1 in url[0] or validated_yt_url_2 in url[0]):
-                                print('Youtube link is valid...')
-                                await ctx.send(f'Downloading {url[0]}')
+                                print('Youtube link is valid')
+                                # Create embedded downloader
+                                embed = discord.Embed(
+                                    title=search,
+                                    url=url[0],
+                                    description=f'<@{ctx.message.author.id}> requested download of {search}({url[0]}) in <#{vc.channel.id}>'
+                                )
+                                embed.set_author(name=ctx.message.author.display_name, url=f'https://discordapp.com/users/{ctx.message.author.id}', icon_url=ctx.message.author.display_avatar)
+                                embedded_downloader = await ctx.send(embed=embed)
+
                                 await mp3.song(url)
                                 os.listdir()
 
@@ -218,13 +226,12 @@ async def download(ctx, *, search: str=None):
                                     # Files over 350MB are not allowed. Limit in upload_file
                                     if file_size > 350000000:
                                         print('The file size is over 350MB')
-
                                         embed = discord.Embed(
                                             title='Error: Filesize over 350MB',
                                             description="Something went wrong :confused:\n\nTry sending a song that is not this huge!\n\nThe maximum size allowed for conversion is 350MB.\n\nCheck out !help and !info commands.",
                                             color=0x0066ff
                                         )
-                                        await ctx.send(embed=embed)
+                                        await embedded_downloader.edit(embed=embed, delete_after=30)
 
                                         os.remove(files)
                                         print('File was deleted')
@@ -244,14 +251,20 @@ async def download(ctx, *, search: str=None):
                                             description=f'File has been converted to MP3\n\n[Download it here]({link})',
                                             color=0x0066ff
                                         )
-                                        await ctx.send(embed=embed)
+                                        await embedded_downloader.edit(embed=embed, delete_after=3600)
 
                                         os.remove(files)
                                         print('File was deleted')
                                     # Send as attachment to channel
                                     else:
                                         print('The file size is under 8MB')
-                                        await ctx.send(file=discord.File(files))
+                                        embed = discord.Embed(
+                                            title=files,
+                                            description=f'File has been converted to MP3\n\nand embedded with the message',
+                                            color=0x0066ff
+                                        )
+                                        await embedded_downloader.add_files(discord.File(files))
+                                        await embedded_downloader.edit(embed=embed, delete_after=3600)
                                         print('File was sent')
 
                                         os.remove(files)
@@ -262,7 +275,7 @@ async def download(ctx, *, search: str=None):
                                     description="Something went wrong :confused: \n\nIt looks like you sent a link to an unsupported site.\n\nCheck out !help and !info commands.",
                                     color=0x0066ff
                                 )
-                                await ctx.send(embed=embed)
+                                await ctx.send(embed=embed, delete_after=30)
                                 print('The link was not valid')
                         else:
                             embed = discord.Embed(
@@ -270,7 +283,7 @@ async def download(ctx, *, search: str=None):
                                 description="Something went wrong :confused: \n\nIt looks like you sent more than one url's, please send one url at time.\n\nCheck out !help and !info commands.",
                                 color=0x0066ff
                             )
-                            await ctx.send(embed=embed)
+                            await ctx.send(embed=embed, delete_after=30)
                             print('There were more than one link')
                     elif not url:
                         # create a youtube search link with our search string
@@ -284,7 +297,15 @@ async def download(ctx, *, search: str=None):
                         new_url = 'https://www.youtube.com/watch?v=' + video_ids[0]
                         print(new_url)
 
-                        await ctx.send(f'Downloading {new_url}')
+                        # Create embedded downloader
+                        embed = discord.Embed(
+                            title=search,
+                            url=new_url,
+                            description=f'<@{ctx.message.author.id}> requested download of {search}({new_url}) in <#{vc.channel.id}>'
+                        )
+                        embed.set_author(name=ctx.message.author.display_name, url=f'https://discordapp.com/users/{ctx.message.author.id}', icon_url=ctx.message.author.display_avatar)
+                        embedded_downloader = await ctx.send(embed=embed)
+
                         await mp3.song([new_url])
                         os.listdir()
 
@@ -298,13 +319,12 @@ async def download(ctx, *, search: str=None):
                             # Files over 350MB are not allowed. Limit in upload_file
                             if file_size > 350000000:
                                 print('The file size is over 350MB')
-
                                 embed = discord.Embed(
                                     title='Error: Filesize over 350MB',
                                     description="Something went wrong :confused:\n\nTry sending a song that is not this huge!\n\nThe maximum size allowed for conversion is 350MB.\n\nCheck out !help and !info commands.",
                                     color=0x0066ff
                                 )
-                                await ctx.send(embed=embed)
+                                await embedded_downloader.edit(embed=embed, delete_after=30)
 
                                 os.remove(files)
                                 print('File was deleted')
@@ -324,14 +344,20 @@ async def download(ctx, *, search: str=None):
                                     description=f'File has been converted to MP3\n\n[Download it here]({link})',
                                     color=0x0066ff
                                 )
-                                await ctx.send(embed=embed)
+                                await embedded_downloader.edit(embed=embed, delete_after=3600)
 
                                 os.remove(files)
                                 print('File was deleted')
                             # Send as attachment to channel
                             else:
                                 print('The file size is under 8MB')
-                                await ctx.send(file=discord.File(files))
+                                embed = discord.Embed(
+                                    title=files,
+                                    description=f'File has been converted to MP3\n\nand embedded with the message',
+                                    color=0x0066ff
+                                )
+                                await embedded_downloader.add_files(discord.File(files))
+                                await embedded_downloader.edit(embed=embed, delete_after=3600)
                                 print('File was sent')
 
                                 os.remove(files)
@@ -342,15 +368,15 @@ async def download(ctx, *, search: str=None):
                             description='Something went wrong check out examples in !help.',
                             color=0x0066ff
                         )
-                        await ctx.send(embed=embed)
+                        await ctx.send(embed=embed, delete_after=30)
                 else:
                     print('Nothing to search for. Searchword is required.')
             else:
                 print('Error: No message content.')
         else:
-            await ctx.send('Nothing is playing, so nothing to download.')
+            await ctx.send('Nothing is playing, so nothing to download.', delete_after=30)
     else:
-        await ctx.send('The bot is not connected to a voice channel')
+        await ctx.send('The bot is not connected to a voice channel', delete_after=30)
 
 @bot.command()
 async def info(ctx):
