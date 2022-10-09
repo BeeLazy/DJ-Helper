@@ -2,7 +2,7 @@ import re, glob, os
 from os.path import getsize
 from dotenv import load_dotenv
 import urllib.request
-import mp3
+from mp3 import ytd
 import discord
 from discord.ext import commands
 import wavelink
@@ -75,6 +75,17 @@ async def timeTuple(ms: int):
     return (hours, minutes, seconds)
 
 # Events
+@bot.event
+async def on_download_start(ctx, url):
+    print('Entered on_download_start')
+    print(f'Requested url:{url}')
+
+@bot.event
+async def on_download_end(ctx, url):
+    print("Entered on_download_end")
+    print(f'Requested url:{url}')
+    print(f'Destination path:TODO')
+
 @bot.event
 async def on_message(message):
     await bot.process_commands(message)
@@ -213,7 +224,8 @@ async def download(ctx, *, search: str=None):
                                 embed.set_author(name=ctx.message.author.display_name, url=f'https://discordapp.com/users/{ctx.message.author.id}', icon_url=ctx.message.author.display_avatar)
                                 embedded_downloader = await ctx.send(embed=embed)
 
-                                await mp3.song(url)
+                                ytd_result = ytd(bot)
+                                await ytd_result.song(ctx, url)
                                 os.listdir()
 
                                 # get all of the .mp3 file in this directory
@@ -258,6 +270,7 @@ async def download(ctx, *, search: str=None):
                                     # Send as attachment to channel
                                     else:
                                         print('The file size is under 8MB')
+                                        bot.dispatch('upload_start', ctx, files)
                                         embed = discord.Embed(
                                             title=files,
                                             description=f'File has been converted to MP3\n\nand embedded with the message',
@@ -266,6 +279,7 @@ async def download(ctx, *, search: str=None):
                                         await embedded_downloader.add_files(discord.File(files))
                                         await embedded_downloader.edit(embed=embed, delete_after=3600)
                                         print('File was sent')
+                                        bot.dispatch('upload_end', ctx, 'Embedded')
 
                                         os.remove(files)
                                         print('File was deleted')
@@ -306,7 +320,8 @@ async def download(ctx, *, search: str=None):
                         embed.set_author(name=ctx.message.author.display_name, url=f'https://discordapp.com/users/{ctx.message.author.id}', icon_url=ctx.message.author.display_avatar)
                         embedded_downloader = await ctx.send(embed=embed)
 
-                        await mp3.song([new_url])
+                        ytd_result = ytd(bot)
+                        await ytd_result.song(ctx, [new_url])
                         os.listdir()
 
                         # get all of the .mp3 file in this directory
@@ -351,6 +366,7 @@ async def download(ctx, *, search: str=None):
                             # Send as attachment to channel
                             else:
                                 print('The file size is under 8MB')
+                                bot.dispatch('upload_start', ctx, files)
                                 embed = discord.Embed(
                                     title=files,
                                     description=f'File has been converted to MP3\n\nand embedded with the message',
@@ -359,6 +375,7 @@ async def download(ctx, *, search: str=None):
                                 await embedded_downloader.add_files(discord.File(files))
                                 await embedded_downloader.edit(embed=embed, delete_after=3600)
                                 print('File was sent')
+                                bot.dispatch('upload_end', ctx, 'Embedded')
 
                                 os.remove(files)
                                 print('File was deleted')
