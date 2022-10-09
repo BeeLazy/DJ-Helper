@@ -18,8 +18,9 @@ class DBox:
     dBox.file_is_shared(file_to)
     """
     
-    def __init__(self, access_token):
+    def __init__(self, access_token, bot):
         self.access_token = access_token
+        self.bot = bot
 
     def upload_file(self, file_from, file_to):
         """
@@ -27,6 +28,7 @@ class DBox:
         150MB max size
         Note: 350GB max with files_upload_session_start
         """
+        self.bot.dispatch("upload_start", ctx, file_from)
         dbx = dropbox.Dropbox(self.access_token)
         with open(file_from, 'rb') as f:
             dbx.files_upload(f.read(), file_to)

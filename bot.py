@@ -107,6 +107,11 @@ async def on_message(message):
         await message.delete()
 
 @bot.event
+async def on_upload_start(ctx, path):
+    print('Entered on_upload_start')
+    print(f'Source path:{path}')
+
+@bot.event
 async def on_wavelink_node_ready(node: wavelink.Node):
     print(f'Node: <{node.identifier}> is ready!')
 
