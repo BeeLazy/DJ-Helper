@@ -35,6 +35,22 @@ class DBox:
         print('File uploaded')
         self.bot.dispatch("upload_end", ctx, file_to)
 
+    def upload_file_with_link(self, ctx, file_from, file_to):
+        """
+        Upload a file to Dropbox, returns shared_link
+        150MB max size
+        Note: 350GB max with files_upload_session_start
+        """
+        self.bot.dispatch("upload_start", ctx, file_from)
+        dbx = dropbox.Dropbox(self.access_token)
+        with open(file_from, 'rb') as f:
+            dbx.files_upload(f.read(), file_to)
+        
+        shared_link = DBox.create_shared_link(self, path=file_to)
+
+        self.bot.dispatch("upload_end", ctx, shared_link)
+        return shared_link
+
     def file_exists(self, path):
         """
         Check if a file exists
