@@ -30,6 +30,11 @@ pip3 install -U youtube_dl
 pip3 install -U dropbox
 ```
 
+Install [ffmpeg](https://github.com/FFmpeg/FFmpeg) to help with decoding and encoding:
+```code
+sudo apt-get install ffmpeg
+```
+
 Some of the settings are stored in environment variables. On Ubuntu one could f.ex store those in a .env file or in the global environment file. The following keys needs to be added:
 - DISCORD_TOKEN
 - LAVALINK_ADDRESS
