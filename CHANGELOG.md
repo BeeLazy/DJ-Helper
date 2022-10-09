@@ -13,14 +13,53 @@ Here we write upgrading notes for brands. It's a team effor to make them as stra
   MINOR Issue title goes here.
 - [Issue-YYY](https://github.com/BeeLazy/DJ-Helper/issues/YYY)
   PATCH Issue title goes here.
-- [Issue-2](https://github.com/BeeLazy/DJ-Helper/issues/2)
-  MINOR ytdl should offer alternativ download ways for files over 8MB
-- [Issue-27](https://github.com/BeeLazy/DJ-Helper/issues/27)
-  MINOR The embedded downloader cleans up after itself
 
 ### Changed
 
 ### Fixed
+
+## [0.3.0] - 2022-10-09
+
+Upgrade instructions:
+- Shut down the bot and Lavalink
+- Overwrite the files in the install folder with the new files
+- Start Lavalink, and then the bot
+
+### Added
+- [Issue-2](https://github.com/BeeLazy/DJ-Helper/issues/2)
+  MINOR ytdl should offer alternativ download ways for files over 8MB
+- [Issue-26](https://github.com/BeeLazy/DJ-Helper/issues/26)
+  MINOR A download MP3 button on the embedded player
+- [Issue-27](https://github.com/BeeLazy/DJ-Helper/issues/27)
+  MINOR The embedded downloader cleans up after itself
+- [Issue-31](https://github.com/BeeLazy/DJ-Helper/issues/31)
+  MINOR New event on_download_start
+- [Issue-32](https://github.com/BeeLazy/DJ-Helper/issues/32)
+  MINOR New event on_download_end
+- [Issue-33](https://github.com/BeeLazy/DJ-Helper/issues/33)
+  MINOR New event on_upload_start
+- [Issue-34](https://github.com/BeeLazy/DJ-Helper/issues/34)
+  MINOR New event on_upload_end
+- [Issue-37](https://github.com/BeeLazy/DJ-Helper/issues/37)
+  MINOR Add ffmpeg for reencoding
+- [Issue-38](https://github.com/BeeLazy/DJ-Helper/issues/38)
+  MINOR Rewrite code. Remove environment.GUILD
+- [Issue-39](https://github.com/BeeLazy/DJ-Helper/issues/39)
+  MINOR Rewrite code. Remove environment.GUILDID
+- [Issue-42](https://github.com/BeeLazy/DJ-Helper/issues/42)
+  MINOR Add custom class of view for EmbeddedPlayer
+- [Issue-43](https://github.com/BeeLazy/DJ-Helper/issues/43)
+  MINOR Add custom class for a link button
+- [Issue-44](https://github.com/BeeLazy/DJ-Helper/issues/44)
+  MINOR Add custom class for a download button
+- [Issue-45](https://github.com/BeeLazy/DJ-Helper/issues/45)
+  MINOR Add a upload function that returns the shared link
+
+### Changed
+
+### Fixed
+- [Issue-41](https://github.com/BeeLazy/DJ-Helper/issues/41)
+  PATCH Bug upload_start events is missing in download command
 
 ## [0.2.0] - 2022-10-05
 
