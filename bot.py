@@ -74,6 +74,19 @@ async def timeTuple(ms: int):
     seconds = float(ms) / 1000
     return (hours, minutes, seconds)
 
+# Classes
+class DownloadButton(Button):
+    def __init__(self, view, label):
+        super().__init__(label=label, style=discord.ButtonStyle.green, custom_id=label)
+        self.aview = view
+
+    async def callback(self, interaction):
+        self.label = f'Processing {self.label}'
+        self.disabled = True
+        self.style = discord.ButtonStyle.blurple
+        await interaction.response.edit_message(view=self.aview)
+        await download(interaction, search=interaction.message.embeds[0].url)
+
 # Events
 @bot.event
 async def on_download_start(ctx, url):
