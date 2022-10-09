@@ -32,7 +32,6 @@ pip3 install -U dropbox
 
 Some of the settings are stored in environment variables. On Ubuntu one could f.ex store those in a .env file or in the global environment file. The following keys needs to be added:
 - DISCORD_TOKEN
-- DISCORD_GUILDID
 - LAVALINK_ADDRESS
 - LAVALINK_PORT
 - LAVALINK_PASSWORD

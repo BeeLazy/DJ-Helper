@@ -14,7 +14,6 @@ from dropbox.exceptions import AuthError
 # Environment
 load_dotenv()
 TOKEN = os.getenv('DISCORD_TOKEN')
-GUILDID = os.getenv('DISCORD_GUILDID')
 LAVALINKADDRESS = os.getenv('LAVALINK_ADDRESS')
 LAVALINKPORT = os.getenv('LAVALINK_PORT')
 LAVALINKPASSWORD = os.getenv('LAVALINK_PASSWORD')
@@ -46,16 +45,6 @@ async def on_ready():
     print('We have logged in as {0.user}'.format(bot))
 
     bot.loop.create_task(connect_nodes())
-
-    guild = bot.get_guild(GUILDID)
-    if guild == None:
-        print('Fetching guild...')
-        guild = await bot.fetch_guild(GUILDID)
-
-    print(
-        f'{bot.user}(id:{bot.user.id}) connected to the following guild:\n'
-        f'{guild.name}(id:{guild.id})'
-    )
 
 # Helper functions
 async def connect_nodes():
