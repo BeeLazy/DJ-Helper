@@ -5,7 +5,7 @@ import urllib.request
 from mp3 import ytd
 import discord
 from discord.ext import commands
-from discord.ui import Button
+from discord.ui import View, Button
 import wavelink
 import asyncio
 from dbox import DBox
@@ -93,6 +93,19 @@ class LinkButton(Button):
         super().__init__(label=label, style=discord.ButtonStyle.url, url=url)
         self.aview = view
         self.url = url
+
+# Views
+class EmbeddedPlayerView(View):
+    def __init__(self, ctx):
+        super().__init__(timeout=None)
+        self.ctx = ctx
+
+    async def on_timeout(self):
+        await self.ctx.send('Timeout')
+
+    async def error_handler(self, error, item, interaction):
+        print(str(error))
+        await interaction.response.send_message(str(error))
 
 # Events
 @bot.event
