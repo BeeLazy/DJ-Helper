@@ -5,6 +5,7 @@ import urllib.request
 from mp3 import ytd
 import discord
 from discord.ext import commands
+from discord.ui import Button
 import wavelink
 import asyncio
 from dbox import DBox
@@ -86,6 +87,12 @@ class DownloadButton(Button):
         self.style = discord.ButtonStyle.blurple
         await interaction.response.edit_message(view=self.aview)
         await download(interaction, search=interaction.message.embeds[0].url)
+
+class LinkButton(Button):
+    def __init__(self, view, label, url):
+        super().__init__(label=label, style=discord.ButtonStyle.url, url=url)
+        self.aview = view
+        self.url = url
 
 # Events
 @bot.event
