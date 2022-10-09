@@ -145,6 +145,57 @@ async def on_upload_start(ctx, path):
     print(f'Source path:{path}')
 
 @bot.event
+async def on_upload_end(ctx, uri):
+    print("Entered on_upload_end")
+    # Check if interaction, or if download has been called directly
+    if type(ctx) is commands.context.Context:
+        print('User called download directly')
+        await ctx.send(f'Starting download of {uri}')
+    elif type(ctx) is discord.interactions.Interaction:
+        print(f'Result(Shared link or destination path):{uri}')
+        if uri == 'Embedded':
+            # Update embedded player
+            ep = bot.embedded_players.get(ctx.guild.id)
+            embeddedPlayerChannel = bot.get_channel(ep[0])
+            embeddedPlayer = await embeddedPlayerChannel.fetch_message(ep[1])
+            view = View.from_message(embeddedPlayer)
+            buttonType = ctx.data.get('custom_id')
+            buttonOld = [x for x in view.children if x.label==f'Processing {buttonType}'][0]
+            view.remove_item(buttonOld)
+            buttonNew = DownloadButton(view, f'{buttonType} Embedded')
+            buttonNew.disabled = True
+            view.add_item(buttonNew)
+            await embeddedPlayer.edit(view=view)
+        elif uri == 'TooBig':
+            # Update embedded player
+            ep = bot.embedded_players.get(ctx.guild.id)
+            embeddedPlayerChannel = bot.get_channel(ep[0])
+            embeddedPlayer = await embeddedPlayerChannel.fetch_message(ep[1])
+            view = View.from_message(embeddedPlayer)
+            buttonType = ctx.data.get('custom_id')
+            buttonOld = [x for x in view.children if x.label==f'Processing {buttonType}'][0]
+            view.remove_item(buttonOld)
+            buttonNew = DownloadButton(view, f'{buttonType} too big')
+            buttonNew.style = discord.ButtonStyle.red
+            buttonNew.disabled = True
+            view.add_item(buttonNew)
+            await embeddedPlayer.edit(view=view)
+        else:
+            # Update embedded player
+            ep = bot.embedded_players.get(ctx.guild.id)
+            embeddedPlayerChannel = bot.get_channel(ep[0])
+            embeddedPlayer = await embeddedPlayerChannel.fetch_message(ep[1])
+            view = View.from_message(embeddedPlayer)
+            buttonType = ctx.data.get('custom_id')
+            buttonOld = [x for x in view.children if x.label==f'Processing {buttonType}'][0]
+            view.remove_item(buttonOld)
+            buttonNew = LinkButton(view, f'{buttonType}', uri)
+            view.add_item(buttonNew)
+            await embeddedPlayer.edit(view=view)
+    else:
+        print(f'Unknown type {type(ctx)} of ctx in on_upload_end')
+
+@bot.event
 async def on_wavelink_node_ready(node: wavelink.Node):
     print(f'Node: <{node.identifier}> is ready!')
 

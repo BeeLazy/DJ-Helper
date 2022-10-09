@@ -22,7 +22,7 @@ class DBox:
         self.access_token = access_token
         self.bot = bot
 
-    def upload_file(self, file_from, file_to):
+    def upload_file(self, ctx, file_from, file_to):
         """
         Upload a file to Dropbox
         150MB max size
@@ -32,6 +32,8 @@ class DBox:
         dbx = dropbox.Dropbox(self.access_token)
         with open(file_from, 'rb') as f:
             dbx.files_upload(f.read(), file_to)
+        print('File uploaded')
+        self.bot.dispatch("upload_end", ctx, file_to)
 
     def file_exists(self, path):
         """
