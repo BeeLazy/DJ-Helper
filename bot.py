@@ -14,7 +14,6 @@ from dropbox.exceptions import AuthError
 # Environment
 load_dotenv()
 TOKEN = os.getenv('DISCORD_TOKEN')
-GUILD = os.getenv('DISCORD_GUILD')
 GUILDID = os.getenv('DISCORD_GUILDID')
 LAVALINKADDRESS = os.getenv('LAVALINK_ADDRESS')
 LAVALINKPORT = os.getenv('LAVALINK_PORT')
