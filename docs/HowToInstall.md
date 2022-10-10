@@ -27,6 +27,7 @@ pip3 install -U wavelink
 pip3 install -U discord.py
 pip3 install -U python-dotenv
 pip3 install -U youtube_dl
+pip3 install -U yt-dlp
 pip3 install -U dropbox
 ```
 

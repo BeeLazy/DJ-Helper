@@ -2,7 +2,7 @@ import re, glob, os
 from os.path import getsize
 from dotenv import load_dotenv
 import urllib.request
-from mp3 import ytd
+from downloader import ytd, ytdlp
 import discord
 from discord.ext import commands
 from discord.ui import View, Button
@@ -10,6 +10,9 @@ import wavelink
 import asyncio
 from dbox import DBox
 from dropbox.exceptions import AuthError
+
+# Global
+YTDOWNLOADENGINE = 'yt_dlp'
 
 # Environment
 load_dotenv()
@@ -312,7 +315,12 @@ async def download(ctx, *, search: str=None):
                     embed.set_author(name=ctx.user.display_name, url=f'https://discordapp.com/users/{ctx.user.id}', icon_url=ctx.user.display_avatar)
                     embedded_downloader = await ctx.channel.send(embed=embed)
 
-                    ytd_result = ytd(bot)
+                    if YTDOWNLOADENGINE ==  'yt_dlp':
+                        ytd_result = ytdlp(bot)
+                    elif YTDOWNLOADENGINE ==  'youtube_dl':
+                        ytd_result = ytd(bot)
+                    else:
+                        print(f'Unknown YTDOWNLOADENGINE {YTDOWNLOADENGINE}')
                     await ytd_result.song(ctx, url)
                     os.listdir()
 
@@ -409,8 +417,13 @@ async def download(ctx, *, search: str=None):
             embed.set_author(name=ctx.user.display_name, url=f'https://discordapp.com/users/{ctx.user.id}', icon_url=ctx.user.display_avatar)
             embedded_downloader = await ctx.channel.send(embed=embed)
             
-            ytd_result = ytd(bot)
-            await ytd_result.song(ctx, [new_url])
+            if YTDOWNLOADENGINE ==  'yt_dlp':
+                ytd_result = ytdlp(bot)
+            elif YTDOWNLOADENGINE ==  'youtube_dl':
+                ytd_result = ytd(bot)
+            else:
+                print(f'Unknown YTDOWNLOADENGINE {YTDOWNLOADENGINE}')
+            await ytd_result.song(ctx, url)
             os.listdir()
 
             # get all of the .mp3 file in this directory

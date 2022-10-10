@@ -64,7 +64,7 @@ DJ-Helper, Wavelink, Lavalink, discord.py,
 dropbox-sdk-python is licensed under the MIT license.
 
 [![License: Unlicense](img/license-Unlicense-blue.svg)](http://unlicense.org/)
-youtube-dl is licensed under the Unlicense license.
+youtube-dl, yt-dlp is licensed under the Unlicense license.
 
 ## Project status
 The project is currently under development.

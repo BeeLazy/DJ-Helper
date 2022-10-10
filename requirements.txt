@@ -10,5 +10,8 @@ python-dotenv
 # youtube-dl
 youtube_dl
 
+# yt-dlp
+yt-dlp
+
 # Dropbox
 dropbox
