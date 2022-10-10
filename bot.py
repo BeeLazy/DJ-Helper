@@ -72,16 +72,19 @@ async def timeTuple(ms: int):
 
 # Classes
 class DownloadButton(Button):
-    def __init__(self, view, label):
-        super().__init__(label=label, style=discord.ButtonStyle.green, custom_id=label)
+    def __init__(self, view, label, style=discord.ButtonStyle.green, disabled=False):
+        super().__init__(label=label, style=style, custom_id=label, disabled=disabled)
         self.aview = view
+        self.style = style
+        self.disabled = disabled
 
     async def callback(self, interaction):
-        self.label = f'Processing {self.label}'
+        calling_label = self.label
+        self.label = f'Processing {calling_label}'
         self.disabled = True
         self.style = discord.ButtonStyle.blurple
         await interaction.response.edit_message(view=self.aview)
-        await download(interaction, search=interaction.message.embeds[0].url)
+        await download(interaction, format=calling_label, search=interaction.message.embeds[0].url)
 
 class LinkButton(Button):
     def __init__(self, view, label, url):
@@ -159,8 +162,13 @@ async def on_upload_end(ctx, uri):
             view.remove_item(buttonOld)
             buttonNew = DownloadButton(view, f'{buttonType} Embedded')
             buttonNew.disabled = True
+            for y in [x for x in view.children if x.label!=f'Processing {buttonType}' and x.style!=discord.ButtonStyle.url]:
+                b = DownloadButton(view=view, label=y.label, style=y.style, disabled=y.disabled)
+                view.remove_item(y)
+                view.add_item(b)
             view.add_item(buttonNew)
-            await embeddedPlayer.edit(view=view)
+            await ctx.message.edit(view=view)
+            await ctx.followup.send(f'Your request is ready, and has been embedded', ephemeral=True)
         elif uri == 'TooBig':
             # Update embedded player
             ep = bot.embedded_players.get(ctx.guild.id)
@@ -173,8 +181,13 @@ async def on_upload_end(ctx, uri):
             buttonNew = DownloadButton(view, f'{buttonType} too big')
             buttonNew.style = discord.ButtonStyle.red
             buttonNew.disabled = True
+            for y in [x for x in view.children if x.label!=f'Processing {buttonType}' and x.style!=discord.ButtonStyle.url]:
+                b = DownloadButton(view=view, label=y.label, style=y.style, disabled=y.disabled)
+                view.remove_item(y)
+                view.add_item(b)
             view.add_item(buttonNew)
-            await embeddedPlayer.edit(view=view)
+            await ctx.message.edit(view=view)
+            await ctx.followup.send('Sorry, but your request was too big', ephemeral=True)
         else:
             # Update embedded player
             ep = bot.embedded_players.get(ctx.guild.id)
@@ -185,8 +198,13 @@ async def on_upload_end(ctx, uri):
             buttonOld = [x for x in view.children if x.label==f'Processing {buttonType}'][0]
             view.remove_item(buttonOld)
             buttonNew = LinkButton(view, f'{buttonType}', uri)
+            for y in [x for x in view.children if x.label!=f'Processing {buttonType}' and x.style!=discord.ButtonStyle.url]:
+                b = DownloadButton(view=view, label=y.label, style=y.style, disabled=y.disabled)
+                view.remove_item(y)
+                view.add_item(b)
             view.add_item(buttonNew)
-            await embeddedPlayer.edit(view=view)
+            await ctx.message.edit(view=view)
+            await ctx.followup.send(f'Your request is ready for [download]({uri})', ephemeral=True)
     else:
         print(f'Unknown type {type(ctx)} of ctx in on_upload_end')
 
@@ -239,8 +257,10 @@ async def on_wavelink_track_start(player: CustomPlayer, track: wavelink.Track):
         queuer = await player.guild.fetch_member(player.track.info.get('QueuerId'))
     
     view = EmbeddedPlayerView(player)
-    newButton = DownloadButton(view, 'MP3')
-    view.add_item(newButton)
+    mp3Button = DownloadButton(view, 'MP3')
+    view.add_item(mp3Button)
+    mp4Button = DownloadButton(view, 'MP4')
+    view.add_item(mp4Button)
     embed = discord.Embed(
         title=track.title,
         url=track.uri,
@@ -287,7 +307,7 @@ async def disconnect(ctx):
     aliases=['ytdl', 'dl', 'mp3'],
     description='Download mp3 file from a link or title search'
 )
-async def download(ctx, *, search: str=None):
+async def download(ctx, *, format='MP3', search: str=None):
     # Bot calling function after user response button callback
     if ctx.message.author.id != bot.user.id:
         print(f'Deleting user message {ctx.message.id}. Reason: Processed command')
@@ -315,19 +335,31 @@ async def download(ctx, *, search: str=None):
                     embed.set_author(name=ctx.user.display_name, url=f'https://discordapp.com/users/{ctx.user.id}', icon_url=ctx.user.display_avatar)
                     embedded_downloader = await ctx.channel.send(embed=embed)
 
-                    if YTDOWNLOADENGINE ==  'yt_dlp':
-                        ytd_result = ytdlp(bot)
-                    elif YTDOWNLOADENGINE ==  'youtube_dl':
-                        ytd_result = ytd(bot)
+                    if format == 'MP3':
+                        if YTDOWNLOADENGINE ==  'yt_dlp':
+                            ytd_result = ytdlp(bot)
+                        elif YTDOWNLOADENGINE ==  'youtube_dl':
+                            ytd_result = ytd(bot)
+                        else:
+                            print(f'Unknown YTDOWNLOADENGINE {YTDOWNLOADENGINE}')
+                        await ytd_result.song(ctx, url)
+                        os.listdir()
+                    elif format == 'MP4':
+                        if YTDOWNLOADENGINE ==  'yt_dlp':
+                            ytd_result = ytdlp(bot)
+                        elif YTDOWNLOADENGINE ==  'youtube_dl':
+                            ytd_result = ytd(bot)
+                        else:
+                            print(f'Unknown YTDOWNLOADENGINE {YTDOWNLOADENGINE}')
+                        await ytd_result.mp4(ctx, url)
+                        os.listdir()
                     else:
-                        print(f'Unknown YTDOWNLOADENGINE {YTDOWNLOADENGINE}')
-                    await ytd_result.song(ctx, url)
-                    os.listdir()
+                        print(f'Unknown format {format}')
+                        
+                    # get all of the media files in this directory
+                    for files in glob.glob(f'*.{format.lower()}'):
 
-                    # get all of the .mp3 file in this directory
-                    for files in glob.glob('*.mp3'):
-
-                        # for each .mp3 file get the file size as integer
+                        # for each media file get the file size as integer
                         file_size = getsize(files)
                         file_size = int(file_size)
 
@@ -337,7 +369,7 @@ async def download(ctx, *, search: str=None):
                             embed = discord.Embed(
                                 title='Error: Filesize over 350MB',
                                 url=url[0],
-                                description="Something went wrong :confused:\n\nTry sending a song that is not this huge!\n\nThe maximum size allowed for conversion is 350MB.\n\nCheck out !help and !info commands.",
+                                description="Something went wrong :confused:\n\nTry sending an item that is not this huge!\n\nThe maximum size allowed for conversion is 350MB.\n\nCheck out !help and !info commands.",
                                 color=0x0066ff
                             )
                             await embedded_downloader.edit(embed=embed, delete_after=30)
@@ -356,7 +388,7 @@ async def download(ctx, *, search: str=None):
                             embed = discord.Embed(
                                 title=files,
                                 url=link,
-                                description=f'File has been converted to MP3\n\n[Download it here]({link})',
+                                description=f'File has been converted to {format}\n\n[Download it here]({link})',
                                 color=0x0066ff
                             )
                             await embedded_downloader.edit(embed=embed, delete_after=3600)
@@ -370,7 +402,7 @@ async def download(ctx, *, search: str=None):
                             embed = discord.Embed(
                                 title=files,
                                 url=url[0],
-                                description=f'File has been converted to MP3 and embedded',
+                                description=f'File has been converted to {format} and embedded',
                                 color=0x0066ff
                             )
                             await embedded_downloader.add_files(discord.File(files))
@@ -417,19 +449,31 @@ async def download(ctx, *, search: str=None):
             embed.set_author(name=ctx.user.display_name, url=f'https://discordapp.com/users/{ctx.user.id}', icon_url=ctx.user.display_avatar)
             embedded_downloader = await ctx.channel.send(embed=embed)
             
-            if YTDOWNLOADENGINE ==  'yt_dlp':
-                ytd_result = ytdlp(bot)
-            elif YTDOWNLOADENGINE ==  'youtube_dl':
-                ytd_result = ytd(bot)
+            if format == 'MP3':
+                if YTDOWNLOADENGINE ==  'yt_dlp':
+                    ytd_result = ytdlp(bot)
+                elif YTDOWNLOADENGINE ==  'youtube_dl':
+                    ytd_result = ytd(bot)
+                else:
+                    print(f'Unknown YTDOWNLOADENGINE {YTDOWNLOADENGINE}')
+                await ytd_result.song(ctx, url)
+                os.listdir()
+            elif format == 'MP4':
+                if YTDOWNLOADENGINE ==  'yt_dlp':
+                    ytd_result = ytdlp(bot)
+                elif YTDOWNLOADENGINE ==  'youtube_dl':
+                    ytd_result = ytd(bot)
+                else:
+                    print(f'Unknown YTDOWNLOADENGINE {YTDOWNLOADENGINE}')
+                await ytd_result.mp4(ctx, url)
+                os.listdir()
             else:
-                print(f'Unknown YTDOWNLOADENGINE {YTDOWNLOADENGINE}')
-            await ytd_result.song(ctx, url)
-            os.listdir()
+                print(f'Unknown format {format}')
 
-            # get all of the .mp3 file in this directory
-            for files in glob.glob('*.mp3'):
+            # get all of the media files in this directory
+            for files in glob.glob(f'*.{format.lower()}'):
 
-                # for each .mp3 file get the file size as integer
+                # for each media file get the file size as integer
                 file_size = getsize(files)
                 file_size = int(file_size)
 
@@ -439,7 +483,7 @@ async def download(ctx, *, search: str=None):
                     embed = discord.Embed(
                         title='Error: Filesize over 350MB',
                         url=new_url,
-                        description="Something went wrong :confused:\n\nTry sending a song that is not this huge!\n\nThe maximum size allowed for conversion is 350MB.\n\nCheck out !help and !info commands.",
+                        description="Something went wrong :confused:\n\nTry sending an item that is not this huge!\n\nThe maximum size allowed for conversion is 350MB.\n\nCheck out !help and !info commands.",
                         color=0x0066ff
                     )
                     await embedded_downloader.edit(embed=embed, delete_after=30)
@@ -458,7 +502,7 @@ async def download(ctx, *, search: str=None):
                     embed = discord.Embed(
                         title=files,
                         url=link,
-                        description=f'File has been converted to MP3\n\n[Download it here]({link})',
+                        description=f'File has been converted to {format}\n\n[Download it here]({link})',
                         color=0x0066ff
                     )
                     await embedded_downloader.edit(embed=embed, delete_after=3600)
@@ -472,7 +516,7 @@ async def download(ctx, *, search: str=None):
                     embed = discord.Embed(
                         title=files,
                         url=new_url,
-                        description=f'File has been converted to MP3 and embedded',
+                        description=f'File has been converted to {format} and embedded',
                         color=0x0066ff
                     )
                     await embedded_downloader.add_files(discord.File(files))
