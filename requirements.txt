@@ -7,6 +7,9 @@ discord.py
 # Dotenv
 python-dotenv
 
+# short_url
+short_url
+
 # youtube-dl
 youtube_dl
 

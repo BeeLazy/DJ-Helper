@@ -53,7 +53,7 @@ class ytdlp:
         self.bot.dispatch('download_start', ctx, url)
         ydl_opts = {
             'format': 'bestaudio/best',
-            'outtmpl': '%(title)s.%(ext)s',
+            'outtmpl': '%(title).200s_[%(id)s].%(ext)s',
             #'extract_audio' : True,
             #'audio_format' : 'mp3',
             #'audio_quality' : 0,
@@ -64,6 +64,7 @@ class ytdlp:
             }],
             'ignoreerrors': False,
             'nonplaylist': True,
+            'restrictfilenames' : True,
         }
 
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
@@ -77,10 +78,10 @@ class ytdlp:
         ydl_opts = {
             # Download the best mp4 video available, or the best video if no mp4 available
             'format': 'bv*[ext=mp4]+ba[ext=m4a]/b[ext=mp4] / bv*+ba/b',
-            'outtmpl': '%(title).200s [%(id)s].%(ext)s',
+            'outtmpl': '%(title).200s_[%(id)s].%(ext)s',
             'ignoreerrors': False,
             'nonplaylist': True,
-            'restrict_filenames' : True,
+            'restrictfilenames' : True,
         }
 
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:

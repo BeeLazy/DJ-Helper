@@ -1,5 +1,6 @@
 import re, glob, os
 from os.path import getsize
+import sqlite3
 from dotenv import load_dotenv
 import urllib.request
 from downloader import ytd, ytdlp
@@ -8,11 +9,8 @@ from discord.ext import commands
 from discord.ui import View, Button
 import wavelink
 import asyncio
-from dbox import DBox
+from uploader import DBox, SHost
 from dropbox.exceptions import AuthError
-
-# Global
-YTDOWNLOADENGINE = 'yt_dlp'
 
 # Environment
 load_dotenv()
@@ -21,6 +19,12 @@ LAVALINKADDRESS = os.getenv('LAVALINK_ADDRESS')
 LAVALINKPORT = os.getenv('LAVALINK_PORT')
 LAVALINKPASSWORD = os.getenv('LAVALINK_PASSWORD')
 DROPBOXTOKEN = os.getenv('DROPBOX_TOKEN')
+DOWNLOAD_ENGINE = os.getenv('DOWNLOAD_ENGINE')
+HOSTING_SMALL_FILES = os.getenv('HOSTING_SMALL_FILES')
+HOSTING_MEDIUM_FILES = os.getenv('HOSTING_MEDIUM_FILES')
+HOSTING_BIG_FILES = os.getenv('HOSTING_BIG_FILES')
+HOSTING_ROOT = os.getenv('HOSTING_ROOT')
+HOSTING_PARENT = os.getenv('HOSTING_PARENT')
 
 # Discord Client
 intents = discord.Intents.all()
@@ -45,6 +49,10 @@ class CustomPlayer(wavelink.Player):
 
 # Dropbox client
 dBox = DBox(DROPBOXTOKEN, bot)
+
+# Database connection
+database_connection = sqlite3.connect('djhelper.db')
+sHost = SHost(database_connection=database_connection, bot=bot)
 
 # HTTPS and websocket operations
 @bot.event
@@ -336,21 +344,21 @@ async def download(ctx, *, format='MP3', search: str=None):
                     embedded_downloader = await ctx.channel.send(embed=embed)
 
                     if format == 'MP3':
-                        if YTDOWNLOADENGINE ==  'yt_dlp':
+                        if DOWNLOAD_ENGINE ==  'yt_dlp':
                             ytd_result = ytdlp(bot)
-                        elif YTDOWNLOADENGINE ==  'youtube_dl':
+                        elif DOWNLOAD_ENGINE ==  'youtube_dl':
                             ytd_result = ytd(bot)
                         else:
-                            print(f'Unknown YTDOWNLOADENGINE {YTDOWNLOADENGINE}')
+                            print(f'Unknown DOWNLOAD_ENGINE {DOWNLOAD_ENGINE}')
                         await ytd_result.song(ctx, url)
                         os.listdir()
                     elif format == 'MP4':
-                        if YTDOWNLOADENGINE ==  'yt_dlp':
+                        if DOWNLOAD_ENGINE ==  'yt_dlp':
                             ytd_result = ytdlp(bot)
-                        elif YTDOWNLOADENGINE ==  'youtube_dl':
+                        elif DOWNLOAD_ENGINE ==  'youtube_dl':
                             ytd_result = ytd(bot)
                         else:
-                            print(f'Unknown YTDOWNLOADENGINE {YTDOWNLOADENGINE}')
+                            print(f'Unknown DOWNLOAD_ENGINE {DOWNLOAD_ENGINE}')
                         await ytd_result.mp4(ctx, url)
                         os.listdir()
                     else:
@@ -366,13 +374,27 @@ async def download(ctx, *, format='MP3', search: str=None):
                         # Files over 350MB are not allowed. Limit in upload_file
                         if file_size > 350000000:
                             print('The file size is over 350MB')
-                            embed = discord.Embed(
-                                title='Error: Filesize over 350MB',
-                                url=url[0],
-                                description="Something went wrong :confused:\n\nTry sending an item that is not this huge!\n\nThe maximum size allowed for conversion is 350MB.\n\nCheck out !help and !info commands.",
-                                color=0x0066ff
-                            )
-                            await embedded_downloader.edit(embed=embed, delete_after=30)
+                            if HOSTING_BIG_FILES == 'self_hosting':
+                                file_to = f'{HOSTING_ROOT}/{HOSTING_PARENT}/{files}'
+                                print(f'Uploading {files} to hosting')
+                                link = sHost.upload_file_with_link(ctx=ctx, file_from=files, file_to=file_to)
+                                print(f'Created shared link {link}')
+                                
+                                embed = discord.Embed(
+                                    title=files,
+                                    url=link,
+                                    description=f'File has been converted to {format}\n\n[Download it here]({link})',
+                                    color=0x0066ff
+                                )
+                                await embedded_downloader.edit(embed=embed, delete_after=3600)
+                            else:
+                                embed = discord.Embed(
+                                    title='Error: Filesize over 350MB',
+                                    url=url[0],
+                                    description="Something went wrong :confused:\n\nTry sending an item that is not this huge!\n\nThe maximum size allowed for conversion is 350MB.\n\nCheck out !help and !info commands.",
+                                    color=0x0066ff
+                                )
+                                await embedded_downloader.edit(embed=embed, delete_after=30)
 
                             os.remove(files)
                             print('File was deleted')
@@ -380,35 +402,63 @@ async def download(ctx, *, format='MP3', search: str=None):
                         # Upload to Dropbox and share link
                         elif file_size > 8000000:
                             print('The file size is 8MB-350MB')
-                            file_to = f'/{files}'
-                            print(f'Uploading {files} to Dropbox')
-                            link = dBox.upload_file_with_link(ctx=ctx, file_from=files, file_to=file_to)
-                            print(f'Created shared link {link}')
-                            
-                            embed = discord.Embed(
-                                title=files,
-                                url=link,
-                                description=f'File has been converted to {format}\n\n[Download it here]({link})',
-                                color=0x0066ff
-                            )
-                            await embedded_downloader.edit(embed=embed, delete_after=3600)
+                            if HOSTING_MEDIUM_FILES == 'self_hosting':
+                                file_to = f'{HOSTING_ROOT}/{HOSTING_PARENT}/{files}'
+                                print(f'Uploading {files} to hosting')
+                                link = sHost.upload_file_with_link(ctx=ctx, file_from=files, file_to=file_to)
+                                print(f'Created shared link {link}')
+                                
+                                embed = discord.Embed(
+                                    title=files,
+                                    url=link,
+                                    description=f'File has been converted to {format}\n\n[Download it here]({link})',
+                                    color=0x0066ff
+                                )
+                                await embedded_downloader.edit(embed=embed, delete_after=3600)
+                            else:
+                                file_to = f'/{files}'
+                                print(f'Uploading {files} to Dropbox')
+                                link = dBox.upload_file_with_link(ctx=ctx, file_from=files, file_to=file_to)
+                                print(f'Created shared link {link}')
+                                
+                                embed = discord.Embed(
+                                    title=files,
+                                    url=link,
+                                    description=f'File has been converted to {format}\n\n[Download it here]({link})',
+                                    color=0x0066ff
+                                )
+                                await embedded_downloader.edit(embed=embed, delete_after=3600)
 
                             os.remove(files)
                             print('File was deleted')
                         # Send as attachment to channel
                         else:
                             print('The file size is under 8MB')
-                            bot.dispatch('upload_start', ctx, files)
-                            embed = discord.Embed(
-                                title=files,
-                                url=url[0],
-                                description=f'File has been converted to {format} and embedded',
-                                color=0x0066ff
-                            )
-                            await embedded_downloader.add_files(discord.File(files))
-                            await embedded_downloader.edit(embed=embed, delete_after=3600)
-                            print('File was sent')
-                            bot.dispatch('upload_end', ctx, 'Embedded')
+                            if HOSTING_SMALL_FILES == 'self_hosting':
+                                file_to = f'{HOSTING_ROOT}/{HOSTING_PARENT}/{files}'
+                                print(f'Uploading {files} to hosting')
+                                link = sHost.upload_file_with_link(ctx=ctx, file_from=files, file_to=file_to)
+                                print(f'Created shared link {link}')
+                                
+                                embed = discord.Embed(
+                                    title=files,
+                                    url=link,
+                                    description=f'File has been converted to {format}\n\n[Download it here]({link})',
+                                    color=0x0066ff
+                                )
+                                await embedded_downloader.edit(embed=embed, delete_after=3600)
+                            else:
+                                bot.dispatch('upload_start', ctx, files)
+                                embed = discord.Embed(
+                                    title=files,
+                                    url=url[0],
+                                    description=f'File has been converted to {format} and embedded',
+                                    color=0x0066ff
+                                )
+                                await embedded_downloader.add_files(discord.File(files))
+                                await embedded_downloader.edit(embed=embed, delete_after=3600)
+                                print('File was embedded')
+                                bot.dispatch('upload_end', ctx, 'Embedded')
 
                             os.remove(files)
                             print('File was deleted')
@@ -450,21 +500,21 @@ async def download(ctx, *, format='MP3', search: str=None):
             embedded_downloader = await ctx.channel.send(embed=embed)
             
             if format == 'MP3':
-                if YTDOWNLOADENGINE ==  'yt_dlp':
+                if DOWNLOAD_ENGINE ==  'yt_dlp':
                     ytd_result = ytdlp(bot)
-                elif YTDOWNLOADENGINE ==  'youtube_dl':
+                elif DOWNLOAD_ENGINE ==  'youtube_dl':
                     ytd_result = ytd(bot)
                 else:
-                    print(f'Unknown YTDOWNLOADENGINE {YTDOWNLOADENGINE}')
+                    print(f'Unknown DOWNLOAD_ENGINE {DOWNLOAD_ENGINE}')
                 await ytd_result.song(ctx, url)
                 os.listdir()
             elif format == 'MP4':
-                if YTDOWNLOADENGINE ==  'yt_dlp':
+                if DOWNLOAD_ENGINE ==  'yt_dlp':
                     ytd_result = ytdlp(bot)
-                elif YTDOWNLOADENGINE ==  'youtube_dl':
+                elif DOWNLOAD_ENGINE ==  'youtube_dl':
                     ytd_result = ytd(bot)
                 else:
-                    print(f'Unknown YTDOWNLOADENGINE {YTDOWNLOADENGINE}')
+                    print(f'Unknown DOWNLOAD_ENGINE {DOWNLOAD_ENGINE}')
                 await ytd_result.mp4(ctx, url)
                 os.listdir()
             else:
@@ -480,13 +530,27 @@ async def download(ctx, *, format='MP3', search: str=None):
                 # Files over 350MB are not allowed. Limit in upload_file
                 if file_size > 350000000:
                     print('The file size is over 350MB')
-                    embed = discord.Embed(
-                        title='Error: Filesize over 350MB',
-                        url=new_url,
-                        description="Something went wrong :confused:\n\nTry sending an item that is not this huge!\n\nThe maximum size allowed for conversion is 350MB.\n\nCheck out !help and !info commands.",
-                        color=0x0066ff
-                    )
-                    await embedded_downloader.edit(embed=embed, delete_after=30)
+                    if HOSTING_BIG_FILES == 'self_hosting':
+                        file_to = f'{HOSTING_ROOT}/{HOSTING_PARENT}/{files}'
+                        print(f'Uploading {files} to hosting')
+                        link = SHost.upload_file_with_link(ctx=ctx, file_from=files, file_to=file_to)
+                        print(f'Created shared link {link}')
+                        
+                        embed = discord.Embed(
+                            title=files,
+                            url=link,
+                            description=f'File has been converted to {format}\n\n[Download it here]({link})',
+                            color=0x0066ff
+                        )
+                        await embedded_downloader.edit(embed=embed, delete_after=3600)
+                    else:
+                        embed = discord.Embed(
+                            title='Error: Filesize over 350MB',
+                            url=url[0],
+                            description="Something went wrong :confused:\n\nTry sending an item that is not this huge!\n\nThe maximum size allowed for conversion is 350MB.\n\nCheck out !help and !info commands.",
+                            color=0x0066ff
+                        )
+                        await embedded_downloader.edit(embed=embed, delete_after=30)
 
                     os.remove(files)
                     print('File was deleted')
@@ -494,35 +558,63 @@ async def download(ctx, *, format='MP3', search: str=None):
                 # Upload to Dropbox and share link
                 elif file_size > 8000000:
                     print('The file size is 8MB-350MB')
-                    file_to = f'/{files}'
-                    print(f'Uploading {files} to Dropbox')
-                    link = dBox.upload_file_with_link(ctx=ctx, file_from=files, file_to=file_to)
-                    print(f'Created shared link {link}')
-                    
-                    embed = discord.Embed(
-                        title=files,
-                        url=link,
-                        description=f'File has been converted to {format}\n\n[Download it here]({link})',
-                        color=0x0066ff
-                    )
-                    await embedded_downloader.edit(embed=embed, delete_after=3600)
+                    if HOSTING_MEDIUM_FILES == 'self_hosting':
+                        file_to = f'{HOSTING_ROOT}/{HOSTING_PARENT}/{files}'
+                        print(f'Uploading {files} to hosting')
+                        link = sHost.upload_file_with_link(ctx=ctx, file_from=files, file_to=file_to)
+                        print(f'Created shared link {link}')
+                        
+                        embed = discord.Embed(
+                            title=files,
+                            url=link,
+                            description=f'File has been converted to {format}\n\n[Download it here]({link})',
+                            color=0x0066ff
+                        )
+                        await embedded_downloader.edit(embed=embed, delete_after=3600)
+                    else:
+                        file_to = f'/{files}'
+                        print(f'Uploading {files} to Dropbox')
+                        link = dBox.upload_file_with_link(ctx=ctx, file_from=files, file_to=file_to)
+                        print(f'Created shared link {link}')
+                        
+                        embed = discord.Embed(
+                            title=files,
+                            url=link,
+                            description=f'File has been converted to {format}\n\n[Download it here]({link})',
+                            color=0x0066ff
+                        )
+                        await embedded_downloader.edit(embed=embed, delete_after=3600)
 
                     os.remove(files)
                     print('File was deleted')
                 # Send as attachment to channel
                 else:
                     print('The file size is under 8MB')
-                    bot.dispatch('upload_start', ctx, files)
-                    embed = discord.Embed(
-                        title=files,
-                        url=new_url,
-                        description=f'File has been converted to {format} and embedded',
-                        color=0x0066ff
-                    )
-                    await embedded_downloader.add_files(discord.File(files))
-                    await embedded_downloader.edit(embed=embed, delete_after=3600)
-                    print('File was sent')
-                    bot.dispatch('upload_end', ctx, 'Embedded')
+                    if HOSTING_SMALL_FILES == 'self_hosting':
+                        file_to = f'{HOSTING_ROOT}/{HOSTING_PARENT}/{files}'
+                        print(f'Uploading {files} to hosting')
+                        link = sHost.upload_file_with_link(ctx=ctx, file_from=files, file_to=file_to)
+                        print(f'Created shared link {link}')
+                        
+                        embed = discord.Embed(
+                            title=files,
+                            url=link,
+                            description=f'File has been converted to {format}\n\n[Download it here]({link})',
+                            color=0x0066ff
+                        )
+                        await embedded_downloader.edit(embed=embed, delete_after=3600)
+                    else:
+                        bot.dispatch('upload_start', ctx, files)
+                        embed = discord.Embed(
+                            title=files,
+                            url=url[0],
+                            description=f'File has been converted to {format} and embedded',
+                            color=0x0066ff
+                        )
+                        await embedded_downloader.add_files(discord.File(files))
+                        await embedded_downloader.edit(embed=embed, delete_after=3600)
+                        print('File was embedded')
+                        bot.dispatch('upload_end', ctx, 'Embedded')
 
                     os.remove(files)
                     print('File was deleted')

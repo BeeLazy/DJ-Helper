@@ -42,6 +42,14 @@ Some of the settings are stored in environment variables. On Ubuntu one could f.
 - LAVALINK_PORT
 - LAVALINK_PASSWORD
 - DROPBOX_TOKEN
+- DOWNLOAD_ENGINE
+- HOSTING_PARENT
+- HOSTING_REDIRECT_BASEURI
+- HOSTING_BASEURI
+- HOSTING_SMALL_FILES
+- HOSTING_MEDIUM_FILES
+- HOSTING_BIG_FILES
+- HOSTING_ROOT
 
 ```code
 sudo nano /etc/environment
