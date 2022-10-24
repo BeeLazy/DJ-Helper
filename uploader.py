@@ -230,7 +230,7 @@ class SHost:
             shared_link = SHost.get_short_url(self, short=short)
             destination_link = SHost.get_shared_url(self, path=path)
             # Create redirect
-            with open(f'/etc/nginx/tinyurl/{short}.conf', 'w') as redirect_file:
+            with open(f'/etc/nginx/shorturl/{short}.conf', 'w') as redirect_file:
                 redirect_file.write('location = /{0}/{1} {{return 301 {2};}}'.format(self.parent, short, destination_link))
             # Reload nginx
             subprocess.call('sudo systemctl reload nginx', shell=True)
