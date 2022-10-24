@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 import dropbox
 from dropbox.sharing import SharedLinkSettings, RequestedVisibility
 import shutil

@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 import re, glob, os
 from os.path import getsize
 import sqlite3

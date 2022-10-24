@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 import youtube_dl
 import yt_dlp
 import functools
